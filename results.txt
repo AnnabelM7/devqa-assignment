@@ -1,0 +1,22 @@
+Opened Playtech website successfully
+
+Teams count in text: 12
+Total displayed team cards: 11
+Teams:
+1. Information Technology
+2. Product
+3. QA
+4. Marketing
+5. Legal & Compliance
+6. Safety & Security
+7. Finance
+8. Data
+9. IT
+10. Customer Support
+11. Software
+WARNING: Displayed teams count is 12, but actual visible team cards count is 11.
+
+Playtech research areas focused on reducing gambling harm:
+1. risk analysis using data derived from the use of BetBuddy
+2. investigating product related risks such as slot game volatility, use of autoplay and the effects of stake limits
+3. encouraging the use of safer gambling tools

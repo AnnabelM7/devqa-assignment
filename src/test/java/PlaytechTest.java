@@ -1,5 +1,11 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,6 +22,7 @@ import org.openqa.selenium.interactions.Actions;
 class PlaytechTest {
 
     private WebDriver driver;
+    private final StringBuilder results = new StringBuilder();
 
     @BeforeEach
     void setUp() {
@@ -26,10 +33,12 @@ class PlaytechTest {
     }
 
     @Test
-    void playtechTasks() {
+    void playtechTasks() throws IOException {
         openWebsite();
         howManyTeams();
-        research();
+        researchInfo();
+
+        exportResultsToFile();
     }
 
     private void openWebsite() {
@@ -46,6 +55,7 @@ class PlaytechTest {
         assertTrue(actualText.contains("We Are Playtech People"),
                 "H1 does not contain expected text. Actual: " + actualText);
 
+        results.append("Opened Playtech website successfully\n\n");
     }
 
     private void howManyTeams() {
@@ -58,27 +68,59 @@ class PlaytechTest {
         Pattern pattern = Pattern.compile("(\\d+)\\s+teams"); // Regular expression to extract the number of teams
         Matcher matcher = pattern.matcher(text);
 
+        int teamsCount;
         if (matcher.find()) {
-            int teamsCount = Integer.parseInt(matcher.group(1));
-            System.out.println("Teams count in text: " + teamsCount);
+            teamsCount = Integer.parseInt(matcher.group(1));
         } else {
-            System.out.println("Could not extract teams count from text: " + text);
+            fail("Could not extract teams count from text: " + text);
+            return;
         }
 
         // Another way to find the number of teams: Locate all team cards and count them
         List<WebElement> teamCards = driver.findElements(
                 By.cssSelector(".teams-cards a"));
 
-        System.out.println("Total team cards: " + teamCards.size());
+        int actualCount = teamCards.size();
 
+        results.append("Teams count in text: ")
+                .append(teamsCount)
+                .append("\n");
+
+        results.append("Total displayed team cards: ")
+                .append(actualCount)
+                .append("\n");
+
+        results.append("Teams:\n");
+
+        int i = 1;
         for (WebElement card : teamCards) {
-            String teamName = card.findElement(By.tagName("h6")).getText();
-            System.out.println(teamName);
+            String teamName = card.findElement(By.tagName("h6")).getText().trim();
+            results.append(i).append(". ").append(teamName).append("\n");
+            i++;
+        }
+
+        assertFalse(teamCards.isEmpty(), "No team cards found.");
+
+        /*
+         * This assertion is intentionally disabled because the website currently shows
+         * a mismatch between the displayed number of teams and the visible team cards.
+         */
+
+        // assertEquals(teamsCount, actualCount,"Mismatch between displayed teams count and actual team cards count.");
+
+        // Log warning instead of failing the whole test
+        if (teamsCount != actualCount) {
+            String warning = "WARNING: Displayed teams count is " + teamsCount
+                    + ", but actual visible team cards count is " + actualCount + ".";
+            System.out.println(warning);
+            results.append(warning).append("\n");
+        } else {
+            results.append("Teams count matches displayed team cards count.\n");
         }
 
     }
 
-    private void research() {
+    private void researchInfo() {
         Actions actions = new Actions(driver);
 
         // Hover over "Life at Playtech" menu item to reveal the dropdown
@@ -106,11 +148,19 @@ class PlaytechTest {
         // items
         List<WebElement> nestedItems = driver.findElements(
                 By.cssSelector(".accordion-body ul ul li"));
+
+        assertFalse(nestedItems.isEmpty(), "No research items found.");
+        results.append("\nPlaytech research areas focused on reducing gambling harm:\n");
+        int i = 1;
         for (WebElement item : nestedItems) {
-            System.out.println(
-                    "Areas we conduct our own research in order to reduce gambling related harm: " + item.getText());
+            results.append(i).append(". ").append(item.getText().trim()).append("\n");
+            i++;
         }
 
+    }
+
+    private void exportResultsToFile() throws IOException {
+        Files.writeString(Path.of("results.txt"), results.toString());
     }
 
     @AfterEach
