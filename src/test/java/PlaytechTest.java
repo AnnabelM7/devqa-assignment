@@ -11,6 +11,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
 
 class PlaytechTest {
 
@@ -28,6 +29,7 @@ class PlaytechTest {
     void playtechTasks() {
         openWebsite();
         howManyTeams();
+        research();
     }
 
     private void openWebsite() {
@@ -47,7 +49,8 @@ class PlaytechTest {
     }
 
     private void howManyTeams() {
-        // One way to find the numberof teams: Locate the element containing the text about teams
+        // One way to find the numberof teams: Locate the element containing the text
+        // about teams
         WebElement teamsText = driver.findElement(
                 By.xpath("//h4[text()='Our teams']/parent::div//p"));
 
@@ -71,6 +74,41 @@ class PlaytechTest {
         for (WebElement card : teamCards) {
             String teamName = card.findElement(By.tagName("h6")).getText();
             System.out.println(teamName);
+        }
+
+    }
+
+    private void research() {
+        Actions actions = new Actions(driver);
+
+        // Hover over "Life at Playtech" menu item to reveal the dropdown
+        WebElement parentMenu = driver.findElement(
+                By.xpath("//a[contains(text(),'Life at Playtech')]"));
+        actions.moveToElement(parentMenu).perform();
+
+        // Click on "Who we are"
+        WebElement whoWeAre = driver.findElement(
+                By.xpath("//ul[contains(@class,'sub-menu')]//a[text()='Who we are']"));
+        whoWeAre.click();
+
+        // Verify that the "Who we are" page is opened by checking the banner title
+        WebElement bannerTitle = driver.findElement(By.cssSelector(".banner-uppertitle"));
+        String bannerText = bannerTitle.getText();
+        assertTrue(bannerText.contains("ABOUT US"),
+                "Banner does not contain expected text. Actual: " + bannerText);
+
+        // Click on "Research" button to expand the section
+        WebElement researchButton = driver.findElement(
+                By.xpath("//button[normalize-space()='Research']"));
+        researchButton.click();
+
+        // Verify that the section is expanded by checking for the presence of nested
+        // items
+        List<WebElement> nestedItems = driver.findElements(
+                By.cssSelector(".accordion-body ul ul li"));
+        for (WebElement item : nestedItems) {
+            System.out.println(
+                    "Areas we conduct our own research in order to reduce gambling related harm: " + item.getText());
         }
 
     }
